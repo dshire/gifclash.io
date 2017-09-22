@@ -1,0 +1,30 @@
+{
+  "name": "gif-card-game",
+  "version": "1.0.0",
+  "description": "A c�ard game with gifs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dshire/gif-card-game.git"
+  },
+  "keywords": [
+    "gif",
+    "gifs",
+    "cardgame",
+    "random"
+  ],
+  "author": "dshire",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dshire/gif-card-game/issues"
+  },
+  "homepage": "https://github.com/dshire/gif-card-game#readme",
+  "dependencies": {
+    "compression": "^1.7.0",
+    "express": "^4.15.4",
+    "socket.io": "^2.0.3"
+  }
+}

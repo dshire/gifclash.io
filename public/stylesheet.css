@@ -1,0 +1,38 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+.playboard{
+    height: 400px;
+    width: 300px;
+    border: black solid 2px;
+    position: absolute;
+    top: calc(50vh - 200px);
+    left: calc(50vw - 150px);
+}
+.playboard.selected{
+    border: 1px solid rgb(86, 180, 239);
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 8px rgba(82, 168, 236, 0.6);
+}
+
+.card {
+    height: 200px;
+    width: 125px;
+    border: black solid 1px;
+    position: absolute;
+    bottom: 30px;
+    left: 30px;
+}
+
+.ui-draggable-dragging {
+    border: 1px solid rgb(86, 180, 239);
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 8px rgba(82, 168, 236, 0.6);
+}
+
+
+.gif{
+    max-width: 100%;
+    max-height: 100%;
+}

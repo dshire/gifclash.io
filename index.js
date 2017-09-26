@@ -63,60 +63,166 @@ app.get('/tweets', function(req, res){
 //     console.log(err);
 // });
 
+
 // --------- SOCKET.IO ------------------
 
+var games = [];
+var gameInfo = {
+    gamesRunning: 0,
+    openGames: 0,
+    playersOnline: 0
+};
 
-var currentPlayers = [];
-var cardsPlayed = [];
-var currentRound = {};
-var currentRoundCount = 0;
+var allPlayers = [];
+
 
 
 io.on('connection', function(socket) {
     console.log(`socket with the id ${socket.id} is now connected`);
+    gameInfo.playersOnline++;
+    socket.to('lobby').emit('newPlayerOnline', {gameInfo});
+
+    socket.emit('welcome',{});
 
     socket.on('disconnect', function() {
         console.log(`socket with the id ${socket.id} is now disconnected`);
-        var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
-        currentPlayers.splice(playerIndex, 1);
-        delete currentRound[socket.id];
-    });
+        gameInfo.playersOnline--;
+        socket.to('lobby').emit('newPlayerOnline', {gameInfo});
+        var allPlayersIndex = allPlayers.findIndex(player => player.id === socket.id );
+        allPlayers.splice(allPlayersIndex, 1);
 
-    var playerCards= [];
-    currentPlayers.push({
-        id: socket.id,
-        playerCards: playerCards,
-        roundsWon: 0
-    });
-    currentRound[socket.id] = 0;
-    console.log('currentPlayers is: ' + currentPlayers);
-
-    var trending = {
-        uri: "http://api.giphy.com/v1/gifs/trending",
-        qs: {
-            api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
-            limit: '6'
-        },
-        json: true
-    };
-
-    rp(trending)
-        .then(function (gifs) {
-
-            var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
-            gifs.data.forEach((e)=> {
-                currentPlayers[playerIndex].playerCards.push({
-                    id: e.id,
-                    mp4: e.images.fixed_width.mp4,
-                    still: e.images.fixed_width.url
-                });
+        var game = getGameByPlayerId(socket.id);
+        if (game >= 0) {
+            console.log('check for (game) true')
+            var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
+            games[game].currentPlayers.splice(playerIndex, 1);
+            delete games[game].currentRound[socket.id];
+            if (games[game].currentPlayers.length < 1) {
+                games.splice(game, 1);
+                gameInfo.openGames--;
+            }
+            io.in('lobby').emit('newGameLobby', {
+                gameInfo,
+                games
             });
-            socket.emit('cardDraft', currentPlayers[playerIndex].playerCards);
-        })
-        .catch(function (err) {
-            console.log(err);
+        }
+    });
+
+    socket.on('welcome', (data) => {
+        allPlayers.push({
+            id: socket.id,
+            name: data.name
+
+        });
+        socket.join('lobby');
+        socket.emit('lobby', {
+            games,
+            gameInfo
+        });
+    });
+
+    socket.on('newGameLobby', (data) => {
+        //leaving old game
+        var game = getGameByPlayerId(socket.id);
+        if (game >= 0) {
+            var name = games[game].gameName;
+            var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
+            games[game].currentPlayers.splice(playerIndex, 1);
+            delete games[game].currentRound[socket.id];
+            if (games[game].currentPlayers.length < 1) {
+                games.splice(game, 1);
+                gameInfo.openGames--;
+            }
+            socket.leave(name);
+        }
+
+        games.push({
+            currentPlayers: [{
+                id: socket.id,
+                playerCards: [],
+                roundsWon: 0
+            }],
+            cardsPlayed: [],
+            currentRound: {[socket.id]: 0},
+            currentRoundCount: 0,
+            gameName: data.game
+        });
+        gameInfo.openGames++;
+        socket.join(data.game);
+        io.in('lobby').emit('newGameLobby', {
+            gameInfo,
+            games
+        });
+        console.log(games[getGameByPlayerId(socket.id)].currentPlayers)
+    });
+
+    socket.on('joinGame', (data) => {
+        //leaving old game
+        var game = getGameByPlayerId(socket.id);
+        if (game >= 0) {
+            var name = games[game].gameName;
+            var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
+            games[game].currentPlayers.splice(playerIndex, 1);
+            delete games[game].currentRound[socket.id];
+            if (games[game].currentPlayers.length < 1) {
+                games.splice(game, 1);
+                gameInfo.openGames--;
+            }
+            socket.leave(name);
+        }
+
+        //joining new game
+        socket.join(data.game);
+        var gameIndex =  games.findIndex(game => game.gameName === data.game );
+        games[gameIndex].currentPlayers.push({
+            id: socket.id,
+            playerCards: [],
+            roundsWon: 0
+        });
+        games[gameIndex].currentRound[socket.id] = 0;
+        io.in('lobby').emit('newGameLobby', {
+            gameInfo,
+            games
         });
 
+        //check player count
+        if (games[gameIndex].currentPlayers.length >= 3) {
+            console.log('currentplayers > 3')
+            io.in(data.game).emit('alllowGameStart', {gameName: data.game});
+        }
+
+    });
+
+    // var trending = {
+    //     uri: "http://api.giphy.com/v1/gifs/trending",
+    //     qs: {
+    //         api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+    //         limit: '6'
+    //     },
+    //     json: true
+    // };
+    //
+    // rp(trending)
+    //     .then(function (gifs) {
+    //
+    //         var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
+    //         gifs.data.forEach((e)=> {
+    //             currentPlayers[playerIndex].playerCards.push({
+    //                 id: e.id,
+    //                 mp4: e.images.fixed_width.mp4,
+    //                 still: e.images.fixed_width.url
+    //             });
+    //         });
+    //         socket.emit('cardDraft', currentPlayers[playerIndex].playerCards);
+    //     })
+    //     .catch(function (err) {
+    //         console.log(err);
+    //     });
+    //
+
+    socket.on('startGame', (data) => {
+        io.in(data.gameName).emit('startGame', { gameName: data.game, gameInfo, games });
+    });
 
     socket.on('drop',(data) => {
         console.log(data);
@@ -183,8 +289,9 @@ io.on('connection', function(socket) {
                         winner: winnerId
                     });
                     setTimeout(() => {
-                        io.sockets.emit('newGame',{
-                            
+                        socket.emit('lobby', {
+                            games,
+                            gameInfo
                         });
                     }, 3000)
                 }, 2000);
@@ -197,28 +304,28 @@ io.on('connection', function(socket) {
         }
     });
 
-
-    socket.on('quote', (data) => {
-        console.log(data)
-        db.collection('quotes').findOneAndUpdate({
-            name: data.name
-        }, {
-            $set: {
-                quote: data.quote
-            }
-        }, (err, result) => {
-            socket.emit('quotes', {quotes: result});
-        })
-        // db.collection('quotes').save(data, (err, result) => {
-        //     if (err) return console.log(err)
-        //
-        //     console.log('saved to database')
-        //     db.collection('quotes').find().toArray((err, result) => {
-        //         if (err) return console.log(err)
-        //         socket.emit('quotes', {quotes: result});
-        //     })
-        // })
-    })
+// DB STUFF
+    // socket.on('quote', (data) => {
+    //     console.log(data)
+    //     db.collection('quotes').findOneAndUpdate({
+    //         name: data.name
+    //     }, {
+    //         $set: {
+    //             quote: data.quote
+    //         }
+    //     }, (err, result) => {
+    //         socket.emit('quotes', {quotes: result});
+    //     })
+    //     // db.collection('quotes').save(data, (err, result) => {
+    //     //     if (err) return console.log(err)
+    //     //
+    //     //     console.log('saved to database')
+    //     //     db.collection('quotes').find().toArray((err, result) => {
+    //     //         if (err) return console.log(err)
+    //     //         socket.emit('quotes', {quotes: result});
+    //     //     })
+    //     // })
+    // })
 
 
 });
@@ -227,3 +334,14 @@ io.on('connection', function(socket) {
 server.listen(8080, function() {
     console.log("I'm listening.");
 });
+
+
+function getGameByPlayerId(id){
+    for(var i =0; i < games.length; i++){
+        for(var j=0; j < games[i].currentPlayers.length; j++){
+            if (games[i].currentPlayers[j].id == id){
+                return i;
+            }
+        }
+    }
+}

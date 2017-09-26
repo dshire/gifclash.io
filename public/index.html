@@ -8,19 +8,7 @@
         <title>G.I.F.</title>
     </head>
     <body>
-        <div class="game-instance">
-
-            <div>Hello, World!</div>
-
-                <input type="text" placeholder="name" name="name" id="name">
-                <input type="text" placeholder="quote" name="quote" id="quote">
-                <button type="button" id="submit-btn">Submit</button>
-
-            <div class="playboard">
-            </div>
-
-            <div class="player-cards"></div>
-        </div>
+        <div class="game-instance"></div>
 
         <script src="/socket.io/socket.io.js"></script>
         <script src="external/jquery/jquery.js"></script>
@@ -28,3 +16,26 @@
         <script src="script.js"></script>
     </body>
 </html>
+
+
+
+<!-- <div class="playboard"></div><div class="player-cards"></div>
+
+<input type="text" placeholder="name" name="name" id="name">
+<input type="text" placeholder="quote" name="quote" id="quote">
+<button type="button" id="submit-btn">Submit</button>
+
+
+<h1>TITLE OF GAME</h1>
+<div class="lobby">
+    <h4 class="players-online">Players Online:&nbsp;${data.gameInfo.playersOnline}</h4>
+    <h4 class="games-number">Games Running:&nbsp;${data.gameInfo.gamesRunning}</h4>
+    <h4 class="open-games">Open Games:&nbsp;${data.gameInfo.openGames}</h4>
+
+    <p>New Game:</p>
+    <input type="text" placeholder="New Game" name="name" id="new-game">
+    <p class="button">Create Game</p>
+
+</div>
+
+<h4 class="join-game">Join Game: (min of 3 players needed to start)</h4> -->

@@ -1,7 +1,7 @@
 {
   "name": "gif-card-game",
   "version": "1.0.0",
-  "description": "A c�ard game with gifs",
+  "description": "A card game with gifs",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -23,8 +23,17 @@
   },
   "homepage": "https://github.com/dshire/gif-card-game#readme",
   "dependencies": {
+    "body-parser": "^1.18.2",
     "compression": "^1.7.0",
     "express": "^4.15.4",
-    "socket.io": "^2.0.3"
+    "favicon": "0.0.2",
+    "mongodb": "^2.2.31",
+    "mongoose": "^4.11.12",
+    "request": "^2.82.0",
+    "request-promise": "^4.2.2",
+    "serve-favicon": "^2.4.4",
+    "socket.io": "^2.0.3",
+    "spiced-pg": "github:spicedacademy/spiced-pg",
+    "uid-safe": "^2.1.5"
   }
 }

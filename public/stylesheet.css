@@ -3,36 +3,92 @@
     padding: 0;
     box-sizing: border-box;
 }
+@font-face {
+font-family: "IMPACT";
+src: url("/style/impact.ttf");
+}
+.meme {
+  padding: 0 5px;
+  font-family: 'IMPACT';
+  text-transform: uppercase;
+  color: white;
+  letter-spacing: 1px;
+  text-shadow:2px 2px 0 #000,
+  -2px -2px 0 #000,
+  2px -2px 0 #000,
+  -2px 2px 0 #000,
+  0px 2px 0 #000,
+  2px 0px 0 #000,
+  0px -2px 0 #000,
+  -2px 0px 0 #000,
+  2px 2px 5px #000;
+}
+
+.card-points {
+    font-size: 163px;
+    position: absolute;
+    top: 10px;
+    left: 46px;
+}
+
+.announce {
+    font-size: 100px;
+    position: absolute;
+    bottom: 50px;
+    text-align: center;
+    width: 100%;
+}
 
 .playboard{
-    height: 400px;
-    width: 300px;
+    height: 250px;
+    width: 700px;
     border: black solid 2px;
     position: absolute;
-    top: calc(50vh - 200px);
-    left: calc(50vw - 150px);
+    top: calc(50vh - 250px);
+    left: calc(50vw - 250px);
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-around;
+    align-items: center;
 }
 .playboard.selected{
     border: 1px solid rgb(86, 180, 239);
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 8px rgba(82, 168, 236, 0.6);
 }
 
-.card {
-    height: 200px;
-    width: 125px;
-    border: black solid 1px;
+.player-cards {
+    width: 100vw;
+    height: 270px;
     position: absolute;
-    bottom: 30px;
-    left: 30px;
+    bottom: 0;
+    border: black dashed 1px;
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.card {
+    height: 225px;
+    width: 200px;
+    border: black solid 6px;
+    border-radius: 5px;
+    background-color: white;
+    position: relative;
 }
 
 .ui-draggable-dragging {
-    border: 1px solid rgb(86, 180, 239);
-    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 8px rgba(82, 168, 236, 0.6);
+
+    box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 15px rgba(82, 168, 236, 0.6);
 }
 
 
 .gif{
     max-width: 100%;
     max-height: 100%;
+    pointer-events: none;
+}
+
+.vote{
+    cursor: pointer;
 }

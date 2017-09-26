@@ -8,19 +8,21 @@
         <title>G.I.F.</title>
     </head>
     <body>
-        <div>Hello, World!</div>
+        <div class="game-instance">
 
-        <div class="playboard">
+            <div>Hello, World!</div>
 
+                <input type="text" placeholder="name" name="name" id="name">
+                <input type="text" placeholder="quote" name="quote" id="quote">
+                <button type="button" id="submit-btn">Submit</button>
+
+            <div class="playboard">
+            </div>
+
+            <div class="player-cards"></div>
         </div>
-        <div class="card">
 
-            <video class="gif" autoplay loop poster="https://media.giphy.com/media/I5xVnGJRHZZf2/200_s.gif">
-                <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4" />
-                <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4">
-            </video>
-        </div>
-
+        <script src="/socket.io/socket.io.js"></script>
         <script src="external/jquery/jquery.js"></script>
         <script src="jquery-ui.js"></script>
         <script src="script.js"></script>

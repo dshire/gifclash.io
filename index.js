@@ -30,29 +30,13 @@ MongoClient.connect(url, function(err, database) {
 app.use(express.static('./public'));
 
 app.get('/',function(req,res){
-    db.collection('quotes').find().toArray(function(err, results) {
-        console.log(results)
-
-        res.sendFile(__dirname+'/index.html');
-    })
+    res.sendFile(__dirname+'/index.html');
 });
 
-app.post('/quotes', (req, res) => {
-    db.collection('quotes').save(req.body, (err, result) => {
-        if (err) return console.log(err)
 
-        console.log('saved to database')
-        res.redirect('/')
-    })
-})
 
-app.get('/tweets', function(req, res){
-    prom.twitter(req, res).then(function(headlines){
-        res.json(headlines);
-        console.log(headlines);
-    }).catch(function(){
-        res.sendStatus(500);
-    });
+app.get('/test', function(req, res){
+    res.sendFile(__dirname+'/public/test.html');
 });
 
 // TWITTER LINES FROM THEONION
@@ -74,7 +58,12 @@ var gameInfo = {
 };
 
 var allPlayers = [];
-
+function nameById(id){
+    var playerIndex = allPlayers.findIndex(player => player.id === id );
+    if (playerIndex >= 0) {
+        return allPlayers[playerIndex].name;
+    }
+}
 
 
 io.on('connection', function(socket) {
@@ -82,24 +71,26 @@ io.on('connection', function(socket) {
     gameInfo.playersOnline++;
     socket.to('lobby').emit('newPlayerOnline', {gameInfo});
 
-    socket.emit('welcome',{});
-
+    socket.emit('welcome',{ownId: socket.id});
+    // console.log(io.sockets.connected)
     socket.on('disconnect', function() {
         console.log(`socket with the id ${socket.id} is now disconnected`);
         gameInfo.playersOnline--;
         socket.to('lobby').emit('newPlayerOnline', {gameInfo});
         var allPlayersIndex = allPlayers.findIndex(player => player.id === socket.id );
-        allPlayers.splice(allPlayersIndex, 1);
-
+        if (allPlayersIndex >= 0) {
+            allPlayers.splice(allPlayersIndex, 1);
+        }
         var game = getGameByPlayerId(socket.id);
         if (game >= 0) {
-            console.log('check for (game) true')
             var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
             games[game].currentPlayers.splice(playerIndex, 1);
             delete games[game].currentRound[socket.id];
             if (games[game].currentPlayers.length < 1) {
                 games.splice(game, 1);
-                gameInfo.openGames--;
+                if (gameInfo.openGames > 0){
+                    gameInfo.openGames--;
+                }
             }
             io.in('lobby').emit('newGameLobby', {
                 gameInfo,
@@ -122,6 +113,13 @@ io.on('connection', function(socket) {
     });
 
     socket.on('newGameLobby', (data) => {
+        for (var i = 0; i < data.games.length; i++) {
+            if (data.games[i].gameName == $('#new-game').val()) {
+                console.log('duplicate room');
+                return;
+            }
+        }
+
         //leaving old game
         var game = getGameByPlayerId(socket.id);
         if (game >= 0) {
@@ -140,12 +138,15 @@ io.on('connection', function(socket) {
             currentPlayers: [{
                 id: socket.id,
                 playerCards: [],
-                roundsWon: 0
+                roundsWon: 0,
+                name: nameById(socket.id)
             }],
+            cardsDrafted: [],
             cardsPlayed: [],
             currentRound: {[socket.id]: 0},
             currentRoundCount: 0,
-            gameName: data.game
+            gameName: data.game,
+            gameStarted: false
         });
         gameInfo.openGames++;
         socket.join(data.game);
@@ -157,8 +158,11 @@ io.on('connection', function(socket) {
     });
 
     socket.on('joinGame', (data) => {
-        //leaving old game
         var game = getGameByPlayerId(socket.id);
+        if ( game >= 0 && games[game].gameName == data.game ) {
+            return;
+        }
+        //leaving old game
         if (game >= 0) {
             var name = games[game].gameName;
             var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
@@ -177,7 +181,8 @@ io.on('connection', function(socket) {
         games[gameIndex].currentPlayers.push({
             id: socket.id,
             playerCards: [],
-            roundsWon: 0
+            roundsWon: 0,
+            name: nameById(socket.id)
         });
         games[gameIndex].currentRound[socket.id] = 0;
         io.in('lobby').emit('newGameLobby', {
@@ -193,68 +198,171 @@ io.on('connection', function(socket) {
 
     });
 
-    // var trending = {
-    //     uri: "http://api.giphy.com/v1/gifs/trending",
-    //     qs: {
-    //         api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
-    //         limit: '6'
-    //     },
-    //     json: true
-    // };
-    //
-    // rp(trending)
-    //     .then(function (gifs) {
-    //
-    //         var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
-    //         gifs.data.forEach((e)=> {
-    //             currentPlayers[playerIndex].playerCards.push({
-    //                 id: e.id,
-    //                 mp4: e.images.fixed_width.mp4,
-    //                 still: e.images.fixed_width.url
-    //             });
-    //         });
-    //         socket.emit('cardDraft', currentPlayers[playerIndex].playerCards);
-    //     })
-    //     .catch(function (err) {
-    //         console.log(err);
-    //     });
-    //
 
     socket.on('startGame', (data) => {
-        io.in(data.gameName).emit('startGame', { gameName: data.game, gameInfo, games });
+
+        // var trending = {
+        //     uri: "http://api.giphy.com/v1/gifs/trending",
+        //     qs: {
+        //         api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+        //         limit: '6'
+        //     },
+        //     json: true
+        // };
+        //
+        // rp(trending)
+        //     .then(function (gifs) {
+        //
+        //         var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
+        //         gifs.data.forEach((e)=> {
+        //             currentPlayers[playerIndex].playerCards.push({
+        //                 id: e.id,
+        //                 mp4: e.images.fixed_width.mp4,
+        //                 still: e.images.fixed_width.url
+        //             });
+        //         });
+        //         socket.emit('cardDraft', currentPlayers[playerIndex].playerCards);
+        //     })
+        //     .catch(function (err) {
+        //         console.log(err);
+        //     });
+
+        gameInfo.openGames--;
+        gameInfo.gamesRunning++;
+        var gameIndex = games.findIndex(game => game.gameName === data.gameName );
+        games[gameIndex].gameStarted = true;
+        games[gameIndex].currentPlayers.forEach((player) => {
+            let socket = io.sockets.connected[player.id];
+            socket.leave('lobby');
+        });
+
+        io.in(data.gameName).emit('startGame', { gameName: data.gameName, gameInfo, game: games[gameIndex] });
+        io.in('lobby').emit('newGameLobby', {
+            gameInfo,
+            games
+        });
     });
 
+    socket.on('draftCards', (data) => {
+        var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
+        var playerCount = games[gameIndex].currentPlayers.length
+
+        var key1 = {
+            uri: "http://api.giphy.com/v1/gifs/search",
+            qs: {
+                q: data.keyword1,
+                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                limit: '15'
+            },
+            json: true
+        };
+        var key2 = {
+            uri: "http://api.giphy.com/v1/gifs/search",
+            qs: {
+                q: data.keyword2,
+                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                limit: '15'
+            },
+            json: true
+        };
+
+        rp(key1).then(function (gifs) {
+            gifs.data.forEach((e)=> {
+                games[gameIndex].cardsDrafted.push({
+                    id: e.id,
+                    mp4: e.images.fixed_width.mp4,
+                    still: e.images.fixed_width.url
+                });
+            });
+
+            if(games[gameIndex].cardsDrafted.length >= playerCount * 30) {
+                deliverCards();
+            }
+        }).catch(function (err) {
+            console.log(err);
+        });
+        rp(key2).then(function (gifs) {
+            gifs.data.forEach((e)=> {
+                games[gameIndex].cardsDrafted.push({
+                    id: e.id,
+                    mp4: e.images.fixed_width.mp4,
+                    still: e.images.fixed_width_still.url
+                });
+            });
+            if(games[gameIndex].cardsDrafted.length >= playerCount * 30) {
+                deliverCards();
+            }
+        }).catch(function (err) {
+            console.log(err);
+        });
+
+
+        function deliverCards(){
+            games[gameIndex].currentPlayers.forEach((player) => {
+                drawCard(player);
+                drawCard(player);
+                drawCard(player);
+                drawCard(player);
+                drawCard(player);
+                drawCard(player);
+            });
+
+            io.in(data.gameName).emit('cardDraft', {
+                gameName: data.gameName,
+                gameInfo,
+                game: games[gameIndex]
+            });
+            // console.log(games[gameIndex].cardsDrafted)
+        }
+
+        function drawCard(player){
+            var cardIndex = Math.floor(Math.random() * games[gameIndex].cardsDrafted.length);
+            // console.log(cardIndex)
+            player.playerCards.push(games[gameIndex].cardsDrafted[cardIndex]);
+            games[gameIndex].cardsDrafted.splice(cardIndex, 1);
+        }
+    })
+
+
     socket.on('drop',(data) => {
-        console.log(data);
-        var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
-        var cardIndex = currentPlayers[playerIndex].playerCards.findIndex(card => card.id === data.cardId );
-        cardsPlayed.push({
+        var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
+        var playerIndex = games[gameIndex].currentPlayers.findIndex(player => player.id === socket.id );
+        var cardIndex = games[gameIndex].currentPlayers[playerIndex].playerCards.findIndex(card => card.id === data.cardId );
+        games[gameIndex].cardsPlayed.push({
             id: data.cardId,
             player: socket.id,
-            mp4: currentPlayers[playerIndex].playerCards[cardIndex].mp4,
-            still: currentPlayers[playerIndex].playerCards[cardIndex].still
+            mp4: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].mp4,
+            still: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].still
         });
-        currentPlayers[playerIndex].playerCards.splice(cardIndex, 1);
-        if (cardsPlayed.length > 0 && cardsPlayed.length >= currentPlayers.length) {
+        games[gameIndex].currentPlayers[playerIndex].playerCards.splice(cardIndex, 1);
+        if (games[gameIndex].cardsPlayed.length > 0 && games[gameIndex].cardsPlayed.length >= games[gameIndex].currentPlayers.length) {
             console.log('vote emit');
-            io.sockets.emit('vote', cardsPlayed);
-            console.log('current players: ' + currentPlayers);
+            io.in(data.gameName).emit('vote', {
+                cardsPlayed: games[gameIndex].cardsPlayed,
+                gameName: data.gameName,
+                gameInfo,
+                game: games[gameIndex]
+            });
+            console.log('current players: ' + games[gameIndex].currentPlayers);
         }
 
     });
 
-    socket.on('playerVoted', (cardId) => {
-        console.log('player voted for card: ' + cardId);
-        var playedCardIndex = cardsPlayed.findIndex(card => card.id === cardId);
-        console.log('player ' + cardsPlayed[playedCardIndex].player + ' gets a point');
-        currentRound[cardsPlayed[playedCardIndex].player]++;
-        console.log(currentRound)
-        currentRoundCount++;
-        if (currentRoundCount >= currentPlayers.length) {
+    socket.on('playerVoted', (data) => {
+        console.log('player voted for card: ' + data.cardId);
+        var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
+        var playedCardIndex = games[gameIndex].cardsPlayed.findIndex(card => card.id === data.cardId);
+        var playerVotedFor = games[gameIndex].cardsPlayed[playedCardIndex].player
+        console.log('player ' + playerVotedFor + ' gets a point');
+
+        games[gameIndex].currentRound[playerVotedFor]++;
+
+        games[gameIndex].currentRoundCount++;
+        if (games[gameIndex].currentRoundCount >= games[gameIndex].currentPlayers.length) {
             //Check for round winner
-            var keys = Object.keys(currentRound),
-                largest = Math.max.apply(null, keys.map(x => currentRound[x])),
-                result = keys.reduce((result, key) => { if (currentRound[key] === largest){ result.push(key); } return result; }, []);
+            var keys = Object.keys(games[gameIndex].currentRound),
+                largest = Math.max.apply(null, keys.map(x => games[gameIndex].currentRound[x])),
+                result = keys.reduce((result, key) => { if (games[gameIndex].currentRound[key] === largest){ result.push(key); } return result; }, []);
 
             var winnerId = result[0];
             var tie = false;
@@ -265,39 +373,67 @@ io.on('connection', function(socket) {
             }
 
             var points = {};
-            for(var key in currentRound) {
-                if(currentRound.hasOwnProperty(key)) {
-                    var index = cardsPlayed.findIndex(card => card.player === key);
-                    var card = cardsPlayed[index].id;
-                    points[card] = currentRound[key];
+            for(var key in games[gameIndex].currentRound) {
+                if(games[gameIndex].currentRound.hasOwnProperty(key)) {
+                    var index = games[gameIndex].cardsPlayed.findIndex(card => card.player === key);
+                    var card = games[gameIndex].cardsPlayed[index].id;
+                    points[card] = games[gameIndex].currentRound[key];
                 }
             }
+            var winnerName = nameById(winnerId);
             console.log('player ' + winnerId + ' wins the round');
-            io.sockets.emit('roundResult', {
-                winner: winnerId,
+            var playerIndex = games[gameIndex].currentPlayers.findIndex(player => player.id === winnerId );
+            games[gameIndex].currentPlayers[playerIndex].roundsWon++;
+            io.in(data.gameName).emit('roundResult', {
+                winner: winnerName,
                 points,
-                tie
+                tie,
+                game: games[gameIndex]
             });
-            var playerIndex = currentPlayers.findIndex(player => player.id === winnerId );
-            currentPlayers[playerIndex].roundsWon++;
-            Object.keys(currentRound).forEach(player => currentRound[player] = 0);
-            currentRoundCount = 0;
-            cardsPlayed = [];
-            if (currentPlayers[playerIndex].roundsWon >= 3) {
+            Object.keys(games[gameIndex].currentRound).forEach(player => games[gameIndex].currentRound[player] = 0);
+            games[gameIndex].currentRoundCount = 0;
+            games[gameIndex].cardsPlayed = [];
+            if (games[gameIndex].currentPlayers[playerIndex].roundsWon >= 3) {
                 setTimeout(() => {
-                    io.sockets.emit('gameOver',{
-                        winner: winnerId
+                    io.in(data.gameName).emit('gameOver',{
+                        winner: winnerName
                     });
+                    gameInfo.gamesRunning--;
+                    var leavingPlayers = games[gameIndex].currentPlayers;
+                    games.splice(gameIndex, 1);
                     setTimeout(() => {
-                        socket.emit('lobby', {
+                        io.in(data.gameName).emit('lobby', {
                             games,
                             gameInfo
                         });
-                    }, 3000)
+                        leavingPlayers.forEach((player) => {
+                            let socket = io.sockets.connected[player.id];
+                            socket.leave(data.gameName);
+                            socket.join('lobby');
+                        });
+
+                    }, 4000);
                 }, 2000);
             } else {
+                var newCards = [];
+                games[gameIndex].currentPlayers.forEach((player) => {
+                    var cardIndex = Math.floor(Math.random() * games[gameIndex].cardsDrafted.length);
+                    console.log(cardIndex);
+                    player.playerCards.push(games[gameIndex].cardsDrafted[cardIndex]);
+                    newCards.push({
+                        player: player.id,
+                        card: games[gameIndex].cardsDrafted[cardIndex]
+                    });
+                    games[gameIndex].cardsDrafted.splice(cardIndex, 1);
+
+                });
                 setTimeout(() => {
-                    io.sockets.emit('newRound', {});
+                    io.in(data.gameName).emit('newRound', {
+                        newCards,
+                        gameName: data.gameName,
+                        gameInfo,
+                        game: games[gameIndex]
+                    });
                 }, 2000);
 
             }

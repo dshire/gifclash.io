@@ -130,7 +130,7 @@ socket.on('cardDraft', (data) => {
     var playerIndex = data.game.currentPlayers.findIndex(player => player.id === ownId );
     var cards = ``;
     data.game.currentPlayers[playerIndex].playerCards.forEach((e) => {
-        cards += `<div class="card" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video></div>`;
+        cards += `<div class="card" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video><textarea class="card-text" maxlength="50" name=""></textarea></div>`;
     });
     $('.player-cards').html(cards);
     $('.card').draggable({revert: "invalid", scroll: false, zIndex: 100, containment: ".game-instance"});
@@ -194,6 +194,7 @@ socket.on('tweet-chosen', (data) => {
             $(ui.draggable[0]).addClass("played-card");
             socket.emit('drop', {
                 cardId: $(ui.draggable[0]).attr('id'),
+                cardText: $(ui.draggable[0]).find('textarea').val(),
                 gameName: data.gameName
             });
         }
@@ -205,7 +206,7 @@ socket.on('vote', (data) => {
     $('.played-card').remove();
     var voteCards = ``;
     data.cardsPlayed.forEach((e) => {
-        voteCards += `<div class="card vote" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video></div>`;
+        voteCards += `<div class="card vote" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video><textarea class="card-text" maxlength="50" readonly="yes" name="">${e.text}</textarea></div>`;
     });
     $('.playboard').html(voteCards);
     $('body').append(`<h2 class="announce meme">VOTE NOW</h2>`);
@@ -255,7 +256,7 @@ socket.on('newRound', (data) => {
 
     var newCardIndex = data.newCards.findIndex(card => card.player === ownId );
     var newCard = data.newCards[newCardIndex].card;
-    var card = `<div class="card" id="${newCard.id}"><video class="gif" autoplay loop poster="${newCard.still}"><source src="${newCard.mp4}" type="video/mp4"></video></div>`;
+    var card = `<div class="card" id="${newCard.id}"><video class="gif" autoplay loop poster="${newCard.still}"><source src="${newCard.mp4}" type="video/mp4"></video><textarea class="card-text" maxlength="50" name=""></textarea></div>`;
 
     $('.player-cards').append(card);
 
@@ -263,6 +264,8 @@ socket.on('newRound', (data) => {
     $('.playboard').removeClass("selected");
     $('.playboard').droppable('destroy');
 
+    console.log('selector is ' + data.game.selector)
+    console.log('id of selector is ' + data.game.currentPlayers[data.game.selector].id)
     if (data.game.currentPlayers[data.game.selector].id == ownId) {
         var tweets = ``;
 

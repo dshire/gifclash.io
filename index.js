@@ -359,12 +359,7 @@ io.on('connection', function(socket) {
 
 
     socket.on('tweet-chosen', (data) => {
-        var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
-        if (games[gameIndex].selector == games[gameIndex].currentPlayers.length) {
-            games[gameIndex].selector = 0;
-        } else {
-            games[gameIndex].selector++;
-        }
+
         console.log(data.tweetText)
         console.log(data.tweetPic)
         io.in(data.gameName).emit('tweet-chosen', {
@@ -380,6 +375,7 @@ io.on('connection', function(socket) {
         var cardIndex = games[gameIndex].currentPlayers[playerIndex].playerCards.findIndex(card => card.id === data.cardId );
         games[gameIndex].cardsPlayed.push({
             id: data.cardId,
+            text: data.cardText,
             player: socket.id,
             mp4: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].mp4,
             still: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].still
@@ -485,6 +481,13 @@ io.on('connection', function(socket) {
                     tweetChoice.push(games[gameIndex].tweets[tweetIndex]);
                     games[gameIndex].tweets.splice(tweetIndex, 1);
                 }
+                if (games[gameIndex].selector == (games[gameIndex].currentPlayers.length - 1)) {
+                    console.log('reducing game selector to 0')
+                    games[gameIndex].selector = 0;
+                } else {
+                    games[gameIndex].selector++;
+                }
+                console.log('selector is ' + games[gameIndex].selector)
                 setTimeout(() => {
                     io.in(data.gameName).emit('newRound', {
                         newCards,

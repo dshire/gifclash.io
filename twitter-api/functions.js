@@ -17,10 +17,12 @@ function reduce(data) {
     var results = [];
     data.forEach(function(e) {
         let source = e.user.name;
+        let img = '';
         let text = e.text.replace(e.entities.urls[0].url, '');
 
         try {
             if (e.entities.media && e.entities.media[0].url) {
+                img = e.entities.media[0].media_url
                 text = text.replace(e.entities.media[0].url, "");
             }
             // if (e.extended_entities.media && e.extended_entities.media[0].url) {
@@ -29,10 +31,14 @@ function reduce(data) {
         } catch(e) {
             console.log(e);
         } finally {
-            results.push ({
-                "text": text,
-                "url": e.entities.urls[0].url
-            });
+            if (img.endsWith('.jpg')) {
+
+                results.push ({
+                    "text": text.trim(),
+                    "url": e.entities.urls[0].url,
+                    "img": img
+                });
+            }
         }
 
     });

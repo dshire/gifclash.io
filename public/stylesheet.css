@@ -8,7 +8,7 @@ font-family: "IMPACT";
 src: url("/style/impact.ttf");
 }
 .meme {
-  padding: 0 5px;
+  /*padding: 0 5px;*/
   font-family: 'IMPACT';
   text-transform: uppercase;
   color: white;
@@ -74,7 +74,7 @@ src: url("/style/impact.ttf");
     width: 900px;
     border: black solid 2px;
     position: absolute;
-    top: calc(50vh - 250px);
+    top: calc(50vh - 220px);
     left: calc(50vw - 350px);
     display: flex;
     flex-flow: row nowrap;
@@ -91,7 +91,7 @@ src: url("/style/impact.ttf");
     height: 270px;
     position: absolute;
     bottom: 0;
-    border: black dashed 1px;
+    /*border: black dashed 1px;*/
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-around;
@@ -122,4 +122,94 @@ src: url("/style/impact.ttf");
 
 .vote{
     cursor: pointer;
+}
+
+
+/* ---------  CHOOSE TWEET -----------  */
+
+.tweet-choice {
+    text-align: center;
+    position: absolute;
+    top: calc(50vh - 250px);
+    left: calc(50vw - 400px);
+    z-index: 200;
+    width: 800px;
+    height: 500px;
+    background-color: rgb(121, 129, 127);
+
+}
+
+.tweet-li {
+    list-style-type: none;
+    margin: 5px;
+}
+.tweet-input {
+    width:600px;
+}
+
+.pic-choice {
+    max-height: 100px;
+    max-width: 200px;
+    vertical-align: middle;
+    border-radius: 5px;
+}
+
+.tweet {
+    font-size: 20px;
+    display: inline-block;
+    vertical-align: middle;
+    width: 500px;
+}
+
+#t-i {
+    margin-left: 5px;
+}
+
+
+/*  --------------  TWEET CHOSEN  ---------------*/
+
+.round-topic {
+    width: calc(100vw - 200px);
+    text-align: center;
+    position: absolute;
+    top: 0;
+    right: 0;
+    margin: 10px auto;
+    padding-right: 170px;
+}
+
+.round-pic {
+    width: 800px;
+    border-radius: 5px;
+    position: absolute;
+    top: 80px;
+    right: calc(50vw - 400px);
+    z-index: 500;
+    -webkit-animation: img 1s 2s forwards;
+    animation: img 1s 2s forwards;
+}
+
+@keyframes img {
+  0%   {
+      width: 800px;
+      right: calc(50vw - 400px);
+      top: 80px;
+  }
+  100% {
+      width: 150px;
+      right: 10px;
+      top: 10px;
+  }
+}
+@-webkit-keyframes img {
+    0%   {
+        width: 800px;
+        right: calc(50vw - 400px);
+        top: 80px;
+    }
+    100% {
+        width: 150px;
+        right: 10px;
+        top: 10px;
+    }
 }

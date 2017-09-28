@@ -39,14 +39,6 @@ app.get('/test', function(req, res){
     res.sendFile(__dirname+'/public/test.html');
 });
 
-// TWITTER LINES FROM THEONION
-// prom.twitter().then(function(headlines){
-//     socket.emit('tweets', headlines);
-//     console.log(headlines);
-// }).catch(function(err){
-//     console.log(err);
-// });
-
 
 // --------- SOCKET.IO ------------------
 
@@ -113,48 +105,56 @@ io.on('connection', function(socket) {
     });
 
     socket.on('newGameLobby', (data) => {
-        for (var i = 0; i < data.games.length; i++) {
-            if (data.games[i].gameName == $('#new-game').val()) {
+        var newGame = true;
+        for (var i = 0; i < games.length; i++) {
+            if (games[i].gameName == data.game) {
                 console.log('duplicate room');
+                newGame = false;
                 return;
             }
         }
 
-        //leaving old game
-        var game = getGameByPlayerId(socket.id);
-        if (game >= 0) {
-            var name = games[game].gameName;
-            var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
-            games[game].currentPlayers.splice(playerIndex, 1);
-            delete games[game].currentRound[socket.id];
-            if (games[game].currentPlayers.length < 1) {
-                games.splice(game, 1);
-                gameInfo.openGames--;
-            }
-            socket.leave(name);
-        }
+        if (newGame) {
 
-        games.push({
-            currentPlayers: [{
-                id: socket.id,
-                playerCards: [],
-                roundsWon: 0,
-                name: nameById(socket.id)
-            }],
-            cardsDrafted: [],
-            cardsPlayed: [],
-            currentRound: {[socket.id]: 0},
-            currentRoundCount: 0,
-            gameName: data.game,
-            gameStarted: false
-        });
-        gameInfo.openGames++;
-        socket.join(data.game);
-        io.in('lobby').emit('newGameLobby', {
-            gameInfo,
-            games
-        });
-        console.log(games[getGameByPlayerId(socket.id)].currentPlayers)
+            //leaving old game
+            var game = getGameByPlayerId(socket.id);
+            if (game >= 0) {
+                var name = games[game].gameName;
+                var playerIndex = games[game].currentPlayers.findIndex(player => player.id === socket.id );
+                games[game].currentPlayers.splice(playerIndex, 1);
+                delete games[game].currentRound[socket.id];
+                if (games[game].currentPlayers.length < 1) {
+                    games.splice(game, 1);
+                    gameInfo.openGames--;
+                }
+                socket.leave(name);
+            }
+
+            games.push({
+                currentPlayers: [{
+                    id: socket.id,
+                    playerCards: [],
+                    roundsWon: 0,
+                    name: nameById(socket.id)
+                }],
+                cardsDrafted: [],
+                cardsPlayed: [],
+                currentRound: {[socket.id]: 0},
+                currentRoundCount: 0,
+                gameName: data.game,
+                gameStarted: false,
+                replacementCards: [],
+                selector: 0,
+                tweets: []
+            });
+            gameInfo.openGames++;
+            socket.join(data.game);
+            io.in('lobby').emit('newGameLobby', {
+                gameInfo,
+                games
+            });
+            console.log(games[getGameByPlayerId(socket.id)].currentPlayers);
+        }
     });
 
     socket.on('joinGame', (data) => {
@@ -201,35 +201,40 @@ io.on('connection', function(socket) {
 
     socket.on('startGame', (data) => {
 
-        // var trending = {
-        //     uri: "http://api.giphy.com/v1/gifs/trending",
-        //     qs: {
-        //         api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
-        //         limit: '6'
-        //     },
-        //     json: true
-        // };
-        //
-        // rp(trending)
-        //     .then(function (gifs) {
-        //
-        //         var playerIndex = currentPlayers.findIndex(player => player.id === socket.id );
-        //         gifs.data.forEach((e)=> {
-        //             currentPlayers[playerIndex].playerCards.push({
-        //                 id: e.id,
-        //                 mp4: e.images.fixed_width.mp4,
-        //                 still: e.images.fixed_width.url
-        //             });
-        //         });
-        //         socket.emit('cardDraft', currentPlayers[playerIndex].playerCards);
-        //     })
-        //     .catch(function (err) {
-        //         console.log(err);
-        //     });
-
         gameInfo.openGames--;
         gameInfo.gamesRunning++;
         var gameIndex = games.findIndex(game => game.gameName === data.gameName );
+
+        // TWITTER LINES FROM THEONION
+        prom.twitter().then(function(headlines){
+            games[gameIndex].tweets = headlines;
+            // console.log(headlines);
+        }).catch(function(err){
+            console.log(err);
+        });
+
+        var trending = {
+            uri: "http://api.giphy.com/v1/gifs/trending",
+            qs: {
+                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                limit: '100'
+            },
+            json: true
+        };
+        rp(trending)
+            .then(function (gifs) {
+                gifs.data.forEach((e)=> {
+                    games[gameIndex].replacementCards.push({
+                        id: e.id,
+                        mp4: e.images.fixed_width.mp4,
+                        still: e.images.fixed_width_still.url
+                    });
+                });
+            })
+            .catch(function (err) {
+                console.log(err);
+            });
+
         games[gameIndex].gameStarted = true;
         games[gameIndex].currentPlayers.forEach((player) => {
             let socket = io.sockets.connected[player.id];
@@ -271,9 +276,19 @@ io.on('connection', function(socket) {
                 games[gameIndex].cardsDrafted.push({
                     id: e.id,
                     mp4: e.images.fixed_width.mp4,
-                    still: e.images.fixed_width.url
+                    still: e.images.fixed_width_still.url
                 });
             });
+
+            if (gifs.data.length < 15) {
+                var num = 15 - gifs.data.length;
+                console.log(num + ' cards are missing from key1')
+                for (var i = 0; i < num; i++){
+                    var cardIndex = Math.floor(Math.random() * games[gameIndex].replacementCards.length);
+                    games[gameIndex].cardsDrafted.push(games[gameIndex].replacementCards[cardIndex]);
+                    games[gameIndex].replacementCards.splice(cardIndex, 1);
+                }
+            }
 
             if(games[gameIndex].cardsDrafted.length >= playerCount * 30) {
                 deliverCards();
@@ -289,6 +304,17 @@ io.on('connection', function(socket) {
                     still: e.images.fixed_width_still.url
                 });
             });
+
+            if (gifs.pagination.count < 15) {
+                var num = 15 - gifs.pagination.count;
+                console.log(num + ' cards are missing from key2')
+                for (var i = 0; i < num; i++){
+                    var cardIndex = Math.floor(Math.random() * games[gameIndex].replacementCards.length);
+                    games[gameIndex].cardsDrafted.push(games[gameIndex].replacementCards[cardIndex]);
+                    games[gameIndex].replacementCards.splice(cardIndex, 1);
+                }
+            }
+
             if(games[gameIndex].cardsDrafted.length >= playerCount * 30) {
                 deliverCards();
             }
@@ -307,10 +333,18 @@ io.on('connection', function(socket) {
                 drawCard(player);
             });
 
+            var tweetChoice = [];
+            for (var i = 0; i < 4; i++){
+                var tweetIndex = Math.floor(Math.random() * games[gameIndex].tweets.length);
+                tweetChoice.push(games[gameIndex].tweets[tweetIndex]);
+                games[gameIndex].tweets.splice(tweetIndex, 1);
+            }
+
             io.in(data.gameName).emit('cardDraft', {
                 gameName: data.gameName,
                 gameInfo,
-                game: games[gameIndex]
+                game: games[gameIndex],
+                tweets: tweetChoice
             });
             // console.log(games[gameIndex].cardsDrafted)
         }
@@ -323,6 +357,22 @@ io.on('connection', function(socket) {
         }
     })
 
+
+    socket.on('tweet-chosen', (data) => {
+        var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
+        if (games[gameIndex].selector == games[gameIndex].currentPlayers.length) {
+            games[gameIndex].selector = 0;
+        } else {
+            games[gameIndex].selector++;
+        }
+        console.log(data.tweetText)
+        console.log(data.tweetPic)
+        io.in(data.gameName).emit('tweet-chosen', {
+            gameName: data.gameName,
+            tweetText: data.tweetText,
+            tweetPic: data.tweetPic
+        });
+    });
 
     socket.on('drop',(data) => {
         var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
@@ -398,7 +448,9 @@ io.on('connection', function(socket) {
                     io.in(data.gameName).emit('gameOver',{
                         winner: winnerName
                     });
-                    gameInfo.gamesRunning--;
+                    if(gameInfo.gamesRunning > 0){
+                        gameInfo.gamesRunning--;
+                    }
                     var leavingPlayers = games[gameIndex].currentPlayers;
                     games.splice(gameIndex, 1);
                     setTimeout(() => {
@@ -427,12 +479,19 @@ io.on('connection', function(socket) {
                     games[gameIndex].cardsDrafted.splice(cardIndex, 1);
 
                 });
+                var tweetChoice = [];
+                for (var i = 0; i < 4; i++){
+                    var tweetIndex = Math.floor(Math.random() * games[gameIndex].tweets.length);
+                    tweetChoice.push(games[gameIndex].tweets[tweetIndex]);
+                    games[gameIndex].tweets.splice(tweetIndex, 1);
+                }
                 setTimeout(() => {
                     io.in(data.gameName).emit('newRound', {
                         newCards,
                         gameName: data.gameName,
                         gameInfo,
-                        game: games[gameIndex]
+                        game: games[gameIndex],
+                        tweets: tweetChoice
                     });
                 }, 2000);
 

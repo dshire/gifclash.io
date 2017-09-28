@@ -31,14 +31,16 @@ socket.on('lobby', (data) => {
     $('.game-instance').html(`<h1>TITLE OF GAME</h1><div class="lobby"><h4 class="players-online">Players Online:&nbsp;${data.gameInfo.playersOnline}</h4><h4 class="games-number">Games Running:&nbsp;${data.gameInfo.gamesRunning}</h4><h4 class="open-games">Open Games:&nbsp;${data.gameInfo.openGames}</h4><div class="games-list-container">${gamesList}</div><p>New Game:</p><input type="text" placeholder=Enter Game Name" name="game" id="new-game"><p class="game-button button">Create Game</p></div>`);
 
     $('.game-button').click(() => {
-
+        var newGame = true
         for (var i = 0; i < data.games.length; i++) {
             if (data.games[i].gameName == $('#new-game').val()) {
                 console.log('duplicate room');
+                newGame = false;
                 return;
             }
         }
-        if ($('#new-game').val()){
+        if (newGame && $('#new-game').val()){
+            console.log('new game created')
             socket.emit('newGameLobby', {game: $('#new-game').val()});
             $('.game-button').off();
         }
@@ -65,20 +67,27 @@ socket.on('newGameLobby', (data) => {
     });
     var gamesList = `<h4 class="join-game">Join Game (min 3 players):</h4><ul class="games-list">${games}</ul>`;
 
+    $('.games-number').html(`Games Running:&nbsp;${data.gameInfo.gamesRunning}`);
+    $('.open-games').html(`Open Games:&nbsp;${data.gameInfo.openGames}`);
     $('.games-list-container').html(gamesList);
     $('.game-item').click((e) => {
         var gameIndex = data.games.findIndex(game => game.gameName === $(e.target).attr('id') );
         if (data.games[gameIndex].currentPlayers.length < 6) {
+            var otherRoom = true;
             for (var i = 0; i < data.games[gameIndex].currentPlayers.length; i++) {
                 if (data.games[gameIndex].currentPlayers[i].id == ownId) {
                     console.log('already in room');
+                    otherRoom = false;
                     return;
                 }
             }
-            socket.emit('joinGame', {
-                game: $(e.target).attr('id')
-            });
-            $(e.target).off();
+            if (otherRoom) {
+                socket.emit('joinGame', {
+                    game: $(e.target).attr('id')
+                });
+                $(e.target).off();
+
+            }
         }
     });
 });
@@ -125,6 +134,58 @@ socket.on('cardDraft', (data) => {
     });
     $('.player-cards').html(cards);
     $('.card').draggable({revert: "invalid", scroll: false, zIndex: 100, containment: ".game-instance"});
+
+    if (data.game.currentPlayers[data.game.selector].id == ownId) {
+        var tweets = ``;
+
+        data.tweets.forEach((tweet) => {
+            tweets += `<li class="tweet-li tweet-click"><p class="tweet">${tweet.text}</p><img class="pic-choice" src="${tweet.img}" alt="image"></li>`;
+        });
+
+        $('.game-instance').append(`<div class="tweet-choice"><h2>Your turn to choose!</h2><ul>${tweets}<li class="tweet-li"><label for="t-i">Write your own:</label><input id="t-i" class="tweet-input" type="text" name="tweet-input" maxlength="100"></li></ul></div>`);
+
+        $('.tweet-click').click((e)=> {
+            $('.tweet-click').off();
+            console.log($(e.currentTarget).find('p').text())
+            console.log($(e.currentTarget).find('img').attr('src'))
+            socket.emit('tweet-chosen', {
+                gameName: data.gameName,
+                tweetText: $(e.currentTarget).find('p').text(),
+                tweetPic: $(e.currentTarget).find('img').attr('src')
+            });
+            $('.tweet-choice').remove();
+        });
+
+        $('#t-i').on("keypress", function(e) {
+            if (e.keyCode == 13) {
+                $('#t-i').off()
+                socket.emit('tweet-chosen', {
+                    gameName: data.gameName,
+                    tweetText: $('#t-i').val(),
+                    tweetPic: null
+                });
+                $('.tweet-choice').remove();
+            }
+        });
+
+    } else {
+        $('body').append(`<h2 class="announce meme">WAIT FOR TOPIC</h2>`)
+    }
+
+});
+
+socket.on('tweet-chosen', (data) => {
+    console.log('got to tweet-chosen');
+    $('.topic-modal').remove();
+    $('.meme').remove();
+    var img = ``;
+    if (data.tweetPic){
+        img = `<img class="round-pic" src="${data.tweetPic}" alt="image">`;
+    }
+    console.log('img is ' + img)
+    var topic = `<div class="topic-modal"><div class="round-topic"><h2 class="round-title">${data.tweetText}</h2></div>${img}</div>`;
+    $('.game-instance').prepend(topic);
+    console.log('topic is ' + topic)
     $('.playboard').droppable({
         drop: function( event, ui ) {
             console.log(ui.draggable[0]);
@@ -150,13 +211,20 @@ socket.on('vote', (data) => {
     $('body').append(`<h2 class="announce meme">VOTE NOW</h2>`);
     $('.vote').click((e) => {
         var cardId = $(e.target).attr('id');
-        console.log(cardId);
-        socket.emit('playerVoted', {
-            cardId,
-            gameName: data.gameName
-        })
-        $('.vote').off('click');
-        $('.announce').html(`<h2 class="announce meme">Waiting for other players</h2>`);
+        var cardIndex = data.cardsPlayed.findIndex(card => card.id === cardId );
+        if (data.cardsPlayed[cardIndex].player == ownId) {
+            $('.announce').html(`<h2 class="announce meme">Don't vote for your own card</h2>`);
+
+        } else {
+
+            console.log(cardId);
+            socket.emit('playerVoted', {
+                cardId,
+                gameName: data.gameName
+            });
+            $('.vote').off('click');
+            $('.announce').html(`<h2 class="announce meme">Waiting for other players</h2>`);
+        }
     });
 });
 
@@ -183,6 +251,7 @@ socket.on('roundResult', (data) =>{
 socket.on('newRound', (data) => {
     $('.meme').remove();
     $('.vote').remove();
+    $('.tweet-choice').remove();
 
     var newCardIndex = data.newCards.findIndex(card => card.player === ownId );
     var newCard = data.newCards[newCardIndex].card;
@@ -192,6 +261,44 @@ socket.on('newRound', (data) => {
 
     $('.card').draggable({revert: "invalid", scroll: false, zIndex: 100, containment: ".game-instance"});
     $('.playboard').removeClass("selected");
+    $('.playboard').droppable('destroy');
+
+    if (data.game.currentPlayers[data.game.selector].id == ownId) {
+        var tweets = ``;
+
+        data.tweets.forEach((tweet) => {
+            tweets += `<li class="tweet-li tweet-click"><p class="tweet">${tweet.text}</p><img class="pic-choice" src="${tweet.img}" alt="image"></li>`;
+        });
+
+        $('.game-instance').append(`<div class="tweet-choice"><h2>Your turn to choose!</h2><ul>${tweets}<li class="tweet-li"><label for="t-i">Write your own:</label><input id="t-i" class="tweet-input" type="text" name="tweet-input" maxlength="100"></li></ul></div>`);
+
+        $('.tweet-click').click((e)=> {
+            $('.tweet-click').off();
+
+            socket.emit('tweet-chosen', {
+                gameName: data.gameName,
+                tweetText: $(e.currentTarget).find('p').text(),
+                tweetPic: $(e.currentTarget).find('img').attr('src')
+            });
+            $('.tweet-choice').remove();
+        });
+
+        $('#t-i').on("keypress", function(e) {
+            if (e.keyCode == 13) {
+                $('#t-i').off()
+                socket.emit('tweet-chosen', {
+                    gameName: data.gameName,
+                    tweetText: $('#t-i').val(),
+                    tweetPic: null
+                });
+                $('.tweet-choice').remove();
+            }
+        });
+
+    } else {
+        $('body').append(`<h2 class="announce meme">WAIT FOR TOPIC</h2>`)
+    }
+
 });
 
 socket.on('gameOver', (data) => {

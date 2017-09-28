@@ -1,30 +1,31 @@
-var express = require('express');
-var app = express();
-var server = require('http').Server(app);
-var io = require('socket.io').listen(server);
-const bodyParser = require('body-parser');
-const compression = require('compression');
-var favicon = require('serve-favicon');
-var uidSafe = require('uid-safe');
-
-var rp = require('request-promise');
-
+const express = require('express');
+const app = express();
+const server = require('http').Server(app);
+const io = require('socket.io').listen(server);
+const rp = require('request-promise');
+const favicon = require('serve-favicon');
 const prom = require('./twitter-api/prom.js');
+// const bodyParser = require('body-parser');
+// const compression = require('compression');
+// var uidSafe = require('uid-safe');
 
-app.use(bodyParser.urlencoded({extended: true}));
 
-var MongoClient = require('mongodb').MongoClient;
-// Connection URL
-var url = 'mongodb://localhost:27017/gifcards';
-var db;
-// Use connect method to connect to the server
-MongoClient.connect(url, function(err, database) {
-    if (err) return console.log(err);
-    db = database;
-    app.listen(3000, () => {
-        console.log('listening on 3000');
-    });
-});
+
+// app.use(compression())
+// app.use(bodyParser.urlencoded({extended: true}));
+
+// var MongoClient = require('mongodb').MongoClient;
+// // Connection URL
+// var url = 'mongodb://localhost:27017/gifcards';
+// var db;
+// // Use connect method to connect to the server
+// MongoClient.connect(url, function(err, database) {
+//     if (err) return console.log(err);
+//     db = database;
+//     app.listen(3000, () => {
+//         console.log('listening on 3000');
+//     });
+// });
 
 
 app.use(express.static('./public'));
@@ -89,6 +90,19 @@ io.on('connection', function(socket) {
                 games
             });
         }
+    });
+
+    socket.on('chatMsg', (data) => {
+        var message = nameById(socket.id) + ': ' + data.message;
+        io.in(data.gameName).emit('chatMsg', {
+            message
+        });
+    });
+    socket.on('generalChat', (data) => {
+        var message = nameById(socket.id) + ': ' + data.message;
+        io.in('lobby').emit('chatMsg', {
+            message
+        });
     });
 
     socket.on('welcome', (data) => {

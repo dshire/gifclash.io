@@ -67,9 +67,54 @@ src: url("/style/impact.ttf");
     width: 200px;
     height: calc(100vh - 270px);
     border: black solid 2px;
+    position: relative;
+}
+
+.chat {
+    margin-top: 10px;
+    text-align: center;
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 10px;
+}
+
+.chat-window {
+    border: 1px solid black;
+    width: 180px;
+    margin-left: 6px;
+    height:150px;
+    border-radius: 5px;
+    padding: 5px 0;
+    padding-right: 1px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.chat-window-content {
+    overflow-y: auto;
+    text-align: left;
+    padding: 0 2px;
+    width: 100%;
+    height: 100%;
+
+}
+
+.chat-li {
+    list-style-type: none;
+    overflow-wrap: break-word;
+}
+
+.chat-input {
+    margin-top: 4px;
+    margin-left: 5px;
+}
+
+.chat-input:focus {
+    outline-width: 0;
 }
 
 .playboard{
+    border-radius: 5px;
     height: 250px;
     width: 900px;
     border: black solid 2px;
@@ -141,6 +186,16 @@ src: url("/style/impact.ttf");
 
 .card-text:focus {
     outline-width: 0;
+}
+
+.vote-card-text {
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    cursor: pointer;
 }
 
 

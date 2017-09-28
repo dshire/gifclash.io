@@ -28,7 +28,17 @@ socket.on('lobby', (data) => {
         });
         gamesList = `<h4 class="join-game">Join Game (min 3 players):</h4><ul class="games-list">${games}</ul>`;
     }
-    $('.game-instance').html(`<h1>TITLE OF GAME</h1><div class="lobby"><h4 class="players-online">Players Online:&nbsp;${data.gameInfo.playersOnline}</h4><h4 class="games-number">Games Running:&nbsp;${data.gameInfo.gamesRunning}</h4><h4 class="open-games">Open Games:&nbsp;${data.gameInfo.openGames}</h4><div class="games-list-container">${gamesList}</div><p>New Game:</p><input type="text" placeholder=Enter Game Name" name="game" id="new-game"><p class="game-button button">Create Game</p></div>`);
+    $('.game-instance').html(`<h1>TITLE OF GAME</h1><div class="lobby"><h4 class="players-online">Players Online:&nbsp;${data.gameInfo.playersOnline}</h4><h4 class="games-number">Games Running:&nbsp;${data.gameInfo.gamesRunning}</h4><h4 class="open-games">Open Games:&nbsp;${data.gameInfo.openGames}</h4><div class="games-list-container">${gamesList}</div><p>New Game:</p><input type="text" placeholder=Enter Game Name" name="game" id="new-game"><p class="game-button button">Create Game</p></div><div class="chat"><label for="chat-window">Chat:</label><div class="chat-window" id="chat-window"><div class="chat-window-content"><ul class="chat-list"></ul></div></div><input class="chat-input" type="text" name="chat-input" value=""></div></div>`);
+
+    $('.chat-input').on("keypress", function(e) {
+        if (e.keyCode == 13) {
+            socket.emit('generalChat', {
+                message: $('.chat-input').val(),
+                gameName: data.gameName
+            });
+            $('.chat-input').val('');
+        }
+    });
 
     $('.game-button').click(() => {
         var newGame = true
@@ -105,8 +115,19 @@ socket.on('startGame', (data) => {
         players += `<li>${player.name}: ${player.roundsWon}`;
     });
 
-    $('.game-instance').html(`<div class="player-bar"><h4>Game: ${data.gameName}</h4><h4>First to 3 Rounds Wins</h4><h4>Players:</h4><ul class="player-score">${players}</ul></div><div class="playboard"></div><div class="player-cards"></div><div class="card-draft"><input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-1"><input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-2"><p class="draft-button button">Draft Cards</p></div>`);
+    $('.game-instance').html(`<div class="player-bar"><h4>Game: ${data.gameName}</h4><h4>First to 3 Rounds Wins</h4><h4>Players:</h4><ul class="player-score">${players}</ul><div class="chat"><label for="chat-window">Chat:</label><div class="chat-window" id="chat-window"><div class="chat-window-content"><ul class="chat-list"></ul></div></div><input class="chat-input" type="text" name="chat-input" value=""></div></div><div class="playboard"></div><div class="player-cards"></div><div class="card-draft"><input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-1"><input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-2"><p class="draft-button button">Draft Cards</p></div>`);
     $('body').append(`<h2 class="announce meme">Pick your cards</h2>`);
+
+    $('.chat-input').on("keypress", function(e) {
+        if (e.keyCode == 13) {
+            socket.emit('chatMsg', {
+                message: $('.chat-input').val(),
+                gameName: data.gameName
+            });
+            $('.chat-input').val('');
+        }
+    });
+
     $('.draft-button').click(() => {
         if ($('#keyword-1').val() && $('#keyword-2').val()){
             $('.draft-button').off();
@@ -122,6 +143,7 @@ socket.on('startGame', (data) => {
         }
     });
 });
+
 
 
 socket.on('cardDraft', (data) => {
@@ -206,12 +228,12 @@ socket.on('vote', (data) => {
     $('.played-card').remove();
     var voteCards = ``;
     data.cardsPlayed.forEach((e) => {
-        voteCards += `<div class="card vote" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video><textarea class="card-text" maxlength="50" readonly="yes" name="">${e.text}</textarea></div>`;
+        voteCards += `<div class="card vote" id="${e.id}"><video class="gif" autoplay loop poster="${e.still}"><source src="${e.mp4}" type="video/mp4"></video><textarea class="card-text vote-card-text" maxlength="50" readonly="yes" name="">${e.text}</textarea></div>`;
     });
     $('.playboard').html(voteCards);
     $('body').append(`<h2 class="announce meme">VOTE NOW</h2>`);
     $('.vote').click((e) => {
-        var cardId = $(e.target).attr('id');
+        var cardId = $(e.currentTarget).attr('id');
         var cardIndex = data.cardsPlayed.findIndex(card => card.id === cardId );
         if (data.cardsPlayed[cardIndex].player == ownId) {
             $('.announce').html(`<h2 class="announce meme">Don't vote for your own card</h2>`);
@@ -307,4 +329,10 @@ socket.on('newRound', (data) => {
 socket.on('gameOver', (data) => {
     $('.announce').remove();
     $('body').append(`<h2 class="announce meme">${data.winner}<br>WINS THE GAME</h2>`);
+});
+
+socket.on('chatMsg', (data) => {
+    var message = `<li class="chat-li">${data.message}</li>`
+    $('.chat-list').append(message)
+    $('.chat-window-content')[0].scrollTop = $('.chat-window-content')[0].scrollHeight
 });

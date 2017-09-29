@@ -3,9 +3,9 @@ const app = express();
 const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const rp = require('request-promise');
-const favicon = require('serve-favicon');
+// const favicon = require('serve-favicon');
 const prom = require('./twitter-api/prom.js');
-const giphyKey = processs.env.GIPHY_KEY || require('./key.json').giphyKey;
+const giphyKey = process.env.GIPHY_KEY || require('./key.json').giphyKey;
 
 app.use(express.static('./public'));
 

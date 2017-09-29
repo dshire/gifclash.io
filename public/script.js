@@ -240,6 +240,7 @@
         $('.playboard').droppable({
             drop: function( event, ui ) {
                 // console.log(ui.draggable[0]);
+                $('body').append(`<h2 class="announce meme">Waiting for other players</h2>`);
                 $('.card').draggable("destroy");
                 $(ui.draggable[0]).addClass("played-card");
                 socket.emit('drop', {
@@ -254,6 +255,7 @@
 
 
     socket.on('vote', (data) => {
+        $('.meme').remove();
         $('.played-card').remove();
         var voteCards = ``;
         data.cardsPlayed.forEach((e) => {

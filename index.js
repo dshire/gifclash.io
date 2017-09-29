@@ -5,36 +5,13 @@ const io = require('socket.io').listen(server);
 const rp = require('request-promise');
 const favicon = require('serve-favicon');
 const prom = require('./twitter-api/prom.js');
-// const bodyParser = require('body-parser');
-// const compression = require('compression');
-// var uidSafe = require('uid-safe');
-
-
-
-// app.use(compression())
-// app.use(bodyParser.urlencoded({extended: true}));
-
-// var MongoClient = require('mongodb').MongoClient;
-// // Connection URL
-// var url = 'mongodb://localhost:27017/gifcards';
-// var db;
-// // Use connect method to connect to the server
-// MongoClient.connect(url, function(err, database) {
-//     if (err) return console.log(err);
-//     db = database;
-//     app.listen(3000, () => {
-//         console.log('listening on 3000');
-//     });
-// });
-
+const giphyKey = processs.env.GIPHY_KEY || require('./key.json').giphyKey;
 
 app.use(express.static('./public'));
 
 app.get('/',function(req,res){
     res.sendFile(__dirname+'/index.html');
 });
-
-
 
 app.get('/test', function(req, res){
     res.sendFile(__dirname+'/public/test.html');
@@ -145,7 +122,7 @@ io.on('connection', function(socket) {
         var newGame = true;
         for (var i = 0; i < games.length; i++) {
             if (games[i].gameName == data.game) {
-                console.log('duplicate room');
+                // console.log('duplicate room');
                 newGame = false;
                 return;
             }
@@ -190,7 +167,6 @@ io.on('connection', function(socket) {
                 gameInfo,
                 games
             });
-            console.log(games[getGameByPlayerId(socket.id)].currentPlayers);
         }
     });
 
@@ -229,7 +205,6 @@ io.on('connection', function(socket) {
 
         //check player count
         if (games[gameIndex].currentPlayers.length >= 3) {
-            console.log('currentplayers > 3')
             io.in(data.game).emit('alllowGameStart', {gameName: data.game});
         }
 
@@ -253,7 +228,7 @@ io.on('connection', function(socket) {
         var trending = {
             uri: "http://api.giphy.com/v1/gifs/trending",
             qs: {
-                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                api_key: giphyKey,
                 limit: '100'
             },
             json: true
@@ -293,7 +268,7 @@ io.on('connection', function(socket) {
             uri: "http://api.giphy.com/v1/gifs/search",
             qs: {
                 q: data.keyword1,
-                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                api_key: giphyKey,
                 limit: '15'
             },
             json: true
@@ -302,7 +277,7 @@ io.on('connection', function(socket) {
             uri: "http://api.giphy.com/v1/gifs/search",
             qs: {
                 q: data.keyword2,
-                api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+                api_key: giphyKey,
                 limit: '15'
             },
             json: true
@@ -319,7 +294,7 @@ io.on('connection', function(socket) {
 
             if (gifs.data.length < 15) {
                 var num = 15 - gifs.data.length;
-                console.log(num + ' cards are missing from key1')
+                // console.log(num + ' cards are missing from key1')
                 for (var i = 0; i < num; i++){
                     var cardIndex = Math.floor(Math.random() * games[gameIndex].replacementCards.length);
                     games[gameIndex].cardsDrafted.push(games[gameIndex].replacementCards[cardIndex]);
@@ -344,7 +319,7 @@ io.on('connection', function(socket) {
 
             if (gifs.pagination.count < 15) {
                 var num = 15 - gifs.pagination.count;
-                console.log(num + ' cards are missing from key2')
+                // console.log(num + ' cards are missing from key2')
                 for (var i = 0; i < num; i++){
                     var cardIndex = Math.floor(Math.random() * games[gameIndex].replacementCards.length);
                     games[gameIndex].cardsDrafted.push(games[gameIndex].replacementCards[cardIndex]);
@@ -397,8 +372,6 @@ io.on('connection', function(socket) {
 
     socket.on('tweet-chosen', (data) => {
 
-        console.log(data.tweetText)
-        console.log(data.tweetPic)
         io.in(data.gameName).emit('tweet-chosen', {
             gameName: data.gameName,
             tweetText: data.tweetText,
@@ -420,24 +393,24 @@ io.on('connection', function(socket) {
         });
         games[gameIndex].currentPlayers[playerIndex].playerCards.splice(cardIndex, 1);
         if (games[gameIndex].cardsPlayed.length > 0 && games[gameIndex].cardsPlayed.length >= games[gameIndex].currentPlayers.length) {
-            console.log('vote emit');
+
             io.in(data.gameName).emit('vote', {
                 cardsPlayed: games[gameIndex].cardsPlayed,
                 gameName: data.gameName,
                 gameInfo,
                 game: games[gameIndex]
             });
-            console.log('current players: ' + games[gameIndex].currentPlayers);
+            // console.log('current players: ' + games[gameIndex].currentPlayers);
         }
 
     });
 
     socket.on('playerVoted', (data) => {
-        console.log('player voted for card: ' + data.cardId);
+        // console.log('player voted for card: ' + data.cardId);
         var gameIndex =  games.findIndex(game => game.gameName === data.gameName );
         var playedCardIndex = games[gameIndex].cardsPlayed.findIndex(card => card.id === data.cardId);
         var playerVotedFor = games[gameIndex].cardsPlayed[playedCardIndex].player
-        console.log('player ' + playerVotedFor + ' gets a point');
+        // console.log('player ' + playerVotedFor + ' gets a point');
 
         games[gameIndex].currentRound[playerVotedFor]++;
 
@@ -465,7 +438,6 @@ io.on('connection', function(socket) {
                 }
             }
             var winnerName = nameById(winnerId);
-            console.log('player ' + winnerId + ' wins the round');
             var playerIndex = games[gameIndex].currentPlayers.findIndex(player => player.id === winnerId );
             games[gameIndex].currentPlayers[playerIndex].roundsWon++;
             io.in(data.gameName).emit('roundResult', {
@@ -488,7 +460,6 @@ io.on('connection', function(socket) {
                     var leavingPlayers = games[gameIndex].currentPlayers;
                     games.splice(gameIndex, 1);
                     setTimeout(() => {
-                        console.log('trendingGifs is ' + trendingGifs)
                         io.in(data.gameName).emit('lobby', {
                             games,
                             gameInfo,
@@ -506,7 +477,6 @@ io.on('connection', function(socket) {
                 var newCards = [];
                 games[gameIndex].currentPlayers.forEach((player) => {
                     var cardIndex = Math.floor(Math.random() * games[gameIndex].cardsDrafted.length);
-                    console.log(cardIndex);
                     player.playerCards.push(games[gameIndex].cardsDrafted[cardIndex]);
                     newCards.push({
                         player: player.id,
@@ -522,12 +492,10 @@ io.on('connection', function(socket) {
                     games[gameIndex].tweets.splice(tweetIndex, 1);
                 }
                 if (games[gameIndex].selector == (games[gameIndex].currentPlayers.length - 1)) {
-                    console.log('reducing game selector to 0')
                     games[gameIndex].selector = 0;
                 } else {
                     games[gameIndex].selector++;
                 }
-                console.log('selector is ' + games[gameIndex].selector)
                 setTimeout(() => {
                     io.in(data.gameName).emit('newRound', {
                         newCards,
@@ -542,35 +510,11 @@ io.on('connection', function(socket) {
         }
     });
 
-// DB STUFF
-    // socket.on('quote', (data) => {
-    //     console.log(data)
-    //     db.collection('quotes').findOneAndUpdate({
-    //         name: data.name
-    //     }, {
-    //         $set: {
-    //             quote: data.quote
-    //         }
-    //     }, (err, result) => {
-    //         socket.emit('quotes', {quotes: result});
-    //     })
-    //     // db.collection('quotes').save(data, (err, result) => {
-    //     //     if (err) return console.log(err)
-    //     //
-    //     //     console.log('saved to database')
-    //     //     db.collection('quotes').find().toArray((err, result) => {
-    //     //         if (err) return console.log(err)
-    //     //         socket.emit('quotes', {quotes: result});
-    //     //     })
-    //     // })
-    // })
-
-
 });
 
 
-server.listen(8080, function() {
-    console.log("I'm listening.");
+server.listen(process.env.PORT || 8080, function() {
+    console.log('Listening on port:8080');
 });
 
 

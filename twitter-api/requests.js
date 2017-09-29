@@ -1,8 +1,8 @@
 const https = require('https');
 
 
-const consumerKey = require('../key.json').consumerKey;
-const consumerSecret = require('../key.json').consumerSecret;
+const consumerKey = process.env.CONSUMER_KEY || require('../key.json').consumerKey;
+const consumerSecret = process.env.CONSUMER_SECRET || require('../key.json').consumerSecret;
 
 
 function getToken(callback) {

@@ -458,6 +458,11 @@ h1 {
     list-style-type: none;
     margin: 5px;
 }
+
+.tweet-click {
+    cursor: pointer;
+}
+
 .tweet-input {
     width:600px;
 }

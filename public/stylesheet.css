@@ -2,11 +2,60 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    font-family: Arial;
 }
 @font-face {
 font-family: "IMPACT";
 src: url("/style/impact.ttf");
 }
+@font-face {
+font-family: "FUTURA";
+src: url("/style/Futura-Medium.woff");
+}
+
+body {
+    overflow: hidden;
+    /*background: linear-gradient(to top, rgb(71, 38, 8), rgb(184, 120, 46));*/
+
+}
+
+h1 {
+    text-align: center;
+    font-family: 'FUTURA';
+    font-size: 180px;
+    padding-top: 50px;
+    cursor: default;
+    z-index: 500;
+    position: relative;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+}
+
+.background {
+    position: absolute;
+    width: 120vw;
+    height: 100vh;
+    top: 0;
+    left: -10vw;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+    padding-left: 10px;
+    padding-right: 10px;
+    overflow: hidden;
+    z-index: -1;
+}
+
+.background-card {
+    margin: 20px 10px;
+    filter: blur(10px);
+}
+
 .meme {
   /*padding: 0 5px;*/
   font-family: 'IMPACT';
@@ -40,48 +89,172 @@ src: url("/style/impact.ttf");
     top: 10px;
     left: 46px;
 }
-
+.announce-game {
+    font-size: 100px;
+    position: absolute;
+    top: 50px;
+    text-align: center;
+    width: 100%;
+    z-index: 10000;
+    cursor: pointer;
+}
 .announce {
     font-size: 100px;
     position: absolute;
     bottom: 50px;
     text-align: center;
     width: 100%;
+    cursor: default;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+}
+
+.enter-name {
+    position: absolute;
+    top: 50vh;
+    left: calc(50vw - 100px);
+    width: 200px;
+    height: 100px;
+    display: flex;
+    flex-flow: column wrap;
+    justify-content: center;
+    align-items: center;
+    border-radius: 10px;
+    background-color: black;
+    z-index: 200;
+}
+
+.name-button {
+    font-family: 'FUTURA', 'Arial';
+    background:white;
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 10px;
+    font-weight: 800;
+}
+.name-button:hover {
+    background: rgb(175, 175, 175);
+}
+
+.lobby {
+    position: absolute;
+    top: 50vh;
+    left: calc(50vw - 300px);
+    width: 600px;
+    height: 275px;
+    display: flex;
+    flex-flow: row wrap;
+    justify-content: space-around;
+    align-items: center;
+    border: black solid 5px;
+    border-radius: 10px;
+    z-index: 200;
+    background-color: rgba(255, 255, 255, 0.85);
+}
+
+.lobby-data {
+    margin: 10px;
+}
+
+.lobby h4 {
+    margin-bottom: 5px;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    -o-user-select: none;
+    cursor:default;
+}
+
+.games-container {
+    overflow-y: auto;
+}
+
+.game-item {
+    cursor: pointer;
+    padding: 3px 5px;
+    border-radius: 3px;
+    margin-bottom: 2px;
+    border: black solid 0.5px;
+}
+
+.own-game {
+    background: black;
+    color: white;
+}
+
+.new-game-container{
+    margin-top: 15px;
+}
+
+#new-game {
+    margin-bottom: 3px;
 }
 
 .card-draft {
     width: 200px;
-    height: 200px;
+    height: 100px;
     position: absolute;
-    top: calc(50vh - 225px);
+    top: calc(50vh - 100px);
     left: calc(50vw - 100px);
     z-index: 50;
-    background-color: rgb(70, 150, 191);
+    border: black solid 1px;
+    background-color: rgba(255, 255, 255, 0.85);
     display: flex;
     flex-flow: column nowrap;
     justify-content: space-around;
     align-items: center;
+    border-radius: 5px;
+    padding: 5px;
+}
+.game-button {
+    background-color: black;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 5px;
+}
+.draft-button {
+    background-color: black;
+    color: white;
+    padding: 3px 10px;
+    border-radius: 15px;
+}
+.draft-button:hover, .game-button:hover {
+    color: rgb(149, 148, 149);
 }
 
 .player-bar{
     width: 200px;
     height: calc(100vh - 270px);
-    border: black solid 2px;
+    border-right: 2px solid black;
+    border-bottom: 2px solid black;
+    border-radius: 0 0 5px 0;
     position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.85);
+    z-index: 30;
+}
+
+.game-info {
+
 }
 
 .chat {
-    margin-top: 10px;
+    margin: 10px;
     text-align: center;
-    position: absolute;
-    bottom: 0;
-    margin-bottom: 10px;
 }
 
 .chat-window {
     border: 1px solid black;
     width: 180px;
-    margin-left: 6px;
     height:150px;
     border-radius: 5px;
     padding: 5px 0;
@@ -99,33 +272,75 @@ src: url("/style/impact.ttf");
 
 }
 
-.chat-li {
+.chat-li, .game-item, .player-item {
     list-style-type: none;
     overflow-wrap: break-word;
 }
 
 .chat-input {
     margin-top: 4px;
-    margin-left: 5px;
 }
 
-.chat-input:focus {
+.chat-input:focus, input {
     outline-width: 0;
 }
 
-.playboard{
-    border-radius: 5px;
+.round-title {
+    font-family: 'FUTURA';
+}
+
+.vote-container{
     height: 250px;
-    width: 900px;
-    border: black solid 2px;
+    width: 100%;
     position: absolute;
     top: calc(50vh - 220px);
+    display: flex;
+    flex-flow: row nowrap;
+    justify-content: center;
+    align-items: center;
+}
+
+.game-background {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    background:url('/style/wood.png');
+}
+.game-background-layer {
+    background-color: rgba(91, 45, 4, 0.8);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
+.playboard{
+    border-radius: 10px;
+    height: 280px;
+    width: 900px;
+    /*border: rgb(87, 54, 24) solid 2px;*/
+    position: absolute;
+    top: calc(50vh - 240px);
     left: calc(50vw - 350px);
     display: flex;
     flex-flow: row nowrap;
     justify-content: space-around;
     align-items: center;
+    background-image: url('/style/felt.png');
 }
+
+.playboard-layer {
+    border-radius: 10px;
+    border: 1px solid rgb(23, 66, 16);
+    background-color: rgba(2, 98, 15, 0.5);
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+}
+
 .playboard.selected{
     border: 1px solid rgb(86, 180, 239);
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 8px rgba(82, 168, 236, 0.6);
@@ -148,7 +363,7 @@ src: url("/style/impact.ttf");
     height: 250px;
     width: 200px;
     border: black solid 6px;
-    border-radius: 5px;
+    border-radius: 9px;
     background-color: white;
     position: relative;
     padding: 7px 7px 10px 7px;
@@ -156,22 +371,29 @@ src: url("/style/impact.ttf");
     flex-flow: column nowrap;
     justify-content:space-between;
     align-items: center;
+    background-image: url('/style/paper-2.png');
+    background-size: cover;
 }
 
-.ui-draggable-dragging {
+
+
+/*.ui-draggable-dragging {
 
     box-shadow: 0px 1px 3px rgba(0, 0, 0, 0.05) inset, 0px 0px 15px rgba(82, 168, 236, 0.6);
-}
+}*/
 
 
 .gif{
     max-width: 100%;
     max-height: 175px;
     pointer-events: none;
+    border-radius: 1.5px;
 }
 
 .vote{
     cursor: pointer;
+    z-index: 50000;
+    margin: 0 5px;
 }
 
 .card-text {
@@ -182,7 +404,24 @@ src: url("/style/impact.ttf");
     margin-top: 10px;
     padding: 5px;
     overflow: hidden;
+    border: none;
+    border-radius: 1.5px;
+    font-family: 'FUTURA';
+    /*text-transform: uppercase;
+    color: white;
+    letter-spacing: 1px;*/
+    /*text-shadow:0.5px 0.5px 0 #000,
+    -2px -2px 0 #000,
+    2px -2px 0 #000,
+    -2px 2px 0 #000,
+    0px 2px 0 #000,
+    2px 0px 0 #000,
+    0px -2px 0 #000,
+    -2px 0px 0 #000,
+    2px 2px 5px #000;*/
 }
+
+
 
 .card-text:focus {
     outline-width: 0;
@@ -210,7 +449,8 @@ src: url("/style/impact.ttf");
     width: 800px;
     height: 500px;
     background-color: rgb(121, 129, 127);
-
+    border-radius: 10px;
+    padding-top: 5px;
 }
 
 .tweet-li {
@@ -250,6 +490,7 @@ src: url("/style/impact.ttf");
     right: 0;
     margin: 10px auto;
     padding-right: 170px;
+    z-index: 10;
 }
 
 .round-pic {
@@ -286,4 +527,38 @@ src: url("/style/impact.ttf");
         right: 10px;
         top: 10px;
     }
+}
+
+
+/*------------   COLORS   --------------*/
+
+.green {
+    background-color: rgb(0,115,62);
+}
+.green .card-text{
+    background-color: rgb(169,211,202);
+}
+.blue {
+    background-color: rgb(14,104,171);
+}
+.blue .card-text{
+    background-color: rgb(179,206,234);
+}
+.red {
+    background-color: rgb(211,32,42);
+}
+.red .card-text{
+    background-color: rgb(235,159,130);
+}
+.white {
+    background-color: rgb(248,231,185);
+}
+.white .card-text{
+    background-color: rgb(249,250,244);
+}
+.black {
+    background-color: rgb(26, 25, 25);
+}
+.black .card-text{
+    background-color: rgb(182, 179, 179);
 }

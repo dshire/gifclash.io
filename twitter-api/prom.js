@@ -1,4 +1,4 @@
-const twitterList = ['theonion'];
+const twitterList = ['clickhole', 'theonion'];
 const requests = require('./requests.js');
 const getTweets = requests.getTweets;
 const getToken = requests.getToken;

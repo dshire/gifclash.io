@@ -9,25 +9,28 @@
     </head>
     <body>
         <div class="game-instance">
+            <div class="game-background"><div class="game-background-layer"></div></div>
             <div class="topic-modal">
                 <div class="round-topic">
                     <h2 class="round-title">NASA’s Mars Roomba Begins Mission To Clean Dust From Planet’s Surface</h2>
                 </div>
-                <img class="round-pic" src="http://pbs.twimg.com/media/DKwUh5EWsAEtltF.jpg" alt="image">
+                <!-- <img class="round-pic" src="http://pbs.twimg.com/media/DKwUh5EWsAEtltF.jpg" alt="image"> -->
             </div>
             <div class="player-bar">
-                <h4>Game: GAMENAME</h4>
-                <h4>First to 3 Rounds Wins</h4>
-                <h4>Players:</h4>
-                <ul>
-                    <li>Mac (rounds: 2)</li>
-                    <li>Dennis (rounds: 1)</li>
-                    <li>Charlie (rounds: 0)</li>
-                </ul>
+                <div class="game-info">
+                    <h4>Game: GAMENAME</h4>
+                    <h4>First to 3 Rounds Wins</h4>
+                    <h4>Players:</h4>
+                    <ul>
+                        <li class="player-item">Mac (rounds: 2)</li>
+                        <li class="player-item">Dennis (rounds: 1)</li>
+                        <li class="player-item">Charlie (rounds: 0)</li>
+                    </ul>
+                </div>
                 <div class="chat">
-                    <label for="chat-window">Chat:</label>
+                    <label for="chat-window">Chat</label>
                     <div class="chat-window" id="chat-window">
-                        <div class="chat-window-content">                
+                        <div class="chat-window-content">
                             <ul class="chat-list">
                                 <li class="chat-li">Test</li>
                             </ul>
@@ -36,8 +39,29 @@
                     <input class="chat-input" type="text" name="chat-input" value="">
                 </div>
             </div>
-            <div class="playboard"></div>
-            <div class="player-cards"></div>
+            <div class="vote-container">
+                <div class="card vote black" id="hduihIUHdwdmj">
+                    <video class="gif" autoplay loop poster="https://media.giphy.com/media/I5xVnGJRHZZf2/200_s.gif">
+                        <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4" />
+                        <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4">
+                    </video>
+                    <textarea class="card-text" maxlength="50" name="" spellcheck="false" placeholder="Add Spice"></textarea>
+                </div>
+            </div>
+
+            <div class="playboard">
+                <div class="playboard-layer"></div>
+            </div>
+            <div class="player-cards">
+                <div class="card black" id="hduihIUHdwdmj">
+                    <video class="gif" autoplay loop poster="https://media.giphy.com/media/I5xVnGJRHZZf2/200_s.gif">
+                        <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4" />
+                        <source src="https://media.giphy.com/media/I5xVnGJRHZZf2/giphy.mp4" type="video/mp4">
+                    </video>
+                    <textarea class="card-text" maxlength="50" name="" spellcheck="false" placeholder="Add Spice"></textarea>
+                </div>
+            </div>
+            <div class="card-draft"><input type="text" placeholder="Keyword" name="keyword" id="keyword-1"><input type="text" placeholder="Keyword" name="keyword" id="keyword-2"><p class="draft-button button">Draft Cards</p></div>
             <!-- <div class="card-draft">
                 <input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-1">
                 <input type="text" placeholder=Enter Keyword" name="keyword" id="keyword-2">

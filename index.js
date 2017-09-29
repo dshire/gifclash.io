@@ -60,11 +60,33 @@ function nameById(id){
 
 
 io.on('connection', function(socket) {
+    var trendingGifs = [];
+    var trending = {
+        uri: "http://api.giphy.com/v1/gifs/trending",
+        qs: {
+            api_key: 'JCju0YWAn9NjYLyaI2UBge9vCLPo3Nkz',
+            limit: '30'
+        },
+        json: true
+    };
+    rp(trending)
+        .then(function (gifs) {
+            gifs.data.forEach((e)=> {
+                trendingGifs.push({
+                    mp4: e.images.fixed_width.mp4,
+                    still: e.images.fixed_width_still.url
+                });
+            });
+            socket.emit('welcome',{ownId: socket.id, cards: trendingGifs});
+        })
+        .catch(function (err) {
+            console.log(err);
+        });
+
     console.log(`socket with the id ${socket.id} is now connected`);
     gameInfo.playersOnline++;
     socket.to('lobby').emit('newPlayerOnline', {gameInfo});
 
-    socket.emit('welcome',{ownId: socket.id});
     // console.log(io.sockets.connected)
     socket.on('disconnect', function() {
         console.log(`socket with the id ${socket.id} is now disconnected`);
@@ -114,7 +136,8 @@ io.on('connection', function(socket) {
         socket.join('lobby');
         socket.emit('lobby', {
             games,
-            gameInfo
+            gameInfo,
+            cards: trendingGifs
         });
     });
 
@@ -219,7 +242,7 @@ io.on('connection', function(socket) {
         gameInfo.gamesRunning++;
         var gameIndex = games.findIndex(game => game.gameName === data.gameName );
 
-        // TWITTER LINES FROM THEONION
+        // GETTING TWITTER HEADLINES
         prom.twitter().then(function(headlines){
             games[gameIndex].tweets = headlines;
             // console.log(headlines);
@@ -390,6 +413,7 @@ io.on('connection', function(socket) {
         games[gameIndex].cardsPlayed.push({
             id: data.cardId,
             text: data.cardText,
+            color: data.color,
             player: socket.id,
             mp4: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].mp4,
             still: games[gameIndex].currentPlayers[playerIndex].playerCards[cardIndex].still
@@ -464,9 +488,11 @@ io.on('connection', function(socket) {
                     var leavingPlayers = games[gameIndex].currentPlayers;
                     games.splice(gameIndex, 1);
                     setTimeout(() => {
+                        console.log('trendingGifs is ' + trendingGifs)
                         io.in(data.gameName).emit('lobby', {
                             games,
-                            gameInfo
+                            gameInfo,
+                            cards: trendingGifs
                         });
                         leavingPlayers.forEach((player) => {
                             let socket = io.sockets.connected[player.id];

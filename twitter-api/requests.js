@@ -40,7 +40,7 @@ function getTweets(handle, token, callback) {
     const req = https.request({
         method: 'GET',
         host: 'api.twitter.com',
-        path: '/1.1/statuses/user_timeline.json?screen_name=' + handle + '&count=150',
+        path: '/1.1/statuses/user_timeline.json?screen_name=' + handle + '&count=200',
         headers: {
             'Authorization': 'Bearer ' + token
         }

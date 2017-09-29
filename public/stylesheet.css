@@ -101,7 +101,7 @@ h1 {
 .announce {
     font-size: 100px;
     position: absolute;
-    bottom: 50px;
+    bottom: 30px;
     text-align: center;
     width: 100%;
     cursor: default;
@@ -111,6 +111,7 @@ h1 {
     -moz-user-select: none;
     -ms-user-select: none;
     -o-user-select: none;
+    z-index: 60000;
 }
 
 .enter-name {

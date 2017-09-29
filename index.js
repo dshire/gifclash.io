@@ -442,73 +442,94 @@ io.on('connection', function(socket) {
             }
             var winnerName = nameById(winnerId);
             var playerIndex = games[gameIndex].currentPlayers.findIndex(player => player.id === winnerId );
-            games[gameIndex].currentPlayers[playerIndex].roundsWon++;
-            io.in(data.gameName).emit('roundResult', {
-                winner: winnerName,
-                points,
-                tie,
-                game: games[gameIndex]
-            });
-            Object.keys(games[gameIndex].currentRound).forEach(player => games[gameIndex].currentRound[player] = 0);
-            games[gameIndex].currentRoundCount = 0;
-            games[gameIndex].cardsPlayed = [];
-            if (games[gameIndex].currentPlayers[playerIndex].roundsWon >= 3) {
-                setTimeout(() => {
-                    io.in(data.gameName).emit('gameOver',{
-                        winner: winnerName
-                    });
-                    if(gameInfo.gamesRunning > 0){
-                        gameInfo.gamesRunning--;
-                    }
-                    var leavingPlayers = games[gameIndex].currentPlayers;
-                    games.splice(gameIndex, 1);
-                    setTimeout(() => {
-                        io.in(data.gameName).emit('lobby', {
-                            games,
-                            gameInfo,
-                            cards: trendingGifs
-                        });
-                        leavingPlayers.forEach((player) => {
-                            let socket = io.sockets.connected[player.id];
-                            socket.leave(data.gameName);
-                            socket.join('lobby');
-                        });
-
-                    }, 4000);
-                }, 2000);
-            } else {
-                var newCards = [];
-                games[gameIndex].currentPlayers.forEach((player) => {
-                    var cardIndex = Math.floor(Math.random() * games[gameIndex].cardsDrafted.length);
-                    player.playerCards.push(games[gameIndex].cardsDrafted[cardIndex]);
-                    newCards.push({
-                        player: player.id,
-                        card: games[gameIndex].cardsDrafted[cardIndex]
-                    });
-                    games[gameIndex].cardsDrafted.splice(cardIndex, 1);
-
+            if (playerIndex >= 0) {
+                games[gameIndex].currentPlayers[playerIndex].roundsWon++;
+                io.in(data.gameName).emit('roundResult', {
+                    winner: winnerName,
+                    points,
+                    tie,
+                    game: games[gameIndex]
                 });
-                var tweetChoice = [];
-                for (var i = 0; i < 4; i++){
-                    var tweetIndex = Math.floor(Math.random() * games[gameIndex].tweets.length);
-                    tweetChoice.push(games[gameIndex].tweets[tweetIndex]);
-                    games[gameIndex].tweets.splice(tweetIndex, 1);
-                }
-                if (games[gameIndex].selector == (games[gameIndex].currentPlayers.length - 1)) {
-                    games[gameIndex].selector = 0;
-                } else {
-                    games[gameIndex].selector++;
-                }
-                setTimeout(() => {
-                    io.in(data.gameName).emit('newRound', {
-                        newCards,
-                        gameName: data.gameName,
-                        gameInfo,
-                        game: games[gameIndex],
-                        tweets: tweetChoice
-                    });
-                }, 2000);
+                Object.keys(games[gameIndex].currentRound).forEach(player => games[gameIndex].currentRound[player] = 0);
+                games[gameIndex].currentRoundCount = 0;
+                games[gameIndex].cardsPlayed = [];
+                if (games[gameIndex].currentPlayers[playerIndex].roundsWon >= 3) {
+                    setTimeout(() => {
+                        io.in(data.gameName).emit('gameOver',{
+                            winner: winnerName
+                        });
+                        if(gameInfo.gamesRunning > 0){
+                            gameInfo.gamesRunning--;
+                        }
+                        var leavingPlayers = games[gameIndex].currentPlayers;
+                        games.splice(gameIndex, 1);
+                        setTimeout(() => {
+                            io.in(data.gameName).emit('lobby', {
+                                games,
+                                gameInfo,
+                                cards: trendingGifs
+                            });
+                            leavingPlayers.forEach((player) => {
+                                let socket = io.sockets.connected[player.id];
+                                socket.leave(data.gameName);
+                                socket.join('lobby');
+                            });
 
+                        }, 4000);
+                    }, 2000);
+                } else {
+                    var newCards = [];
+                    games[gameIndex].currentPlayers.forEach((player) => {
+                        var cardIndex = Math.floor(Math.random() * games[gameIndex].cardsDrafted.length);
+                        player.playerCards.push(games[gameIndex].cardsDrafted[cardIndex]);
+                        newCards.push({
+                            player: player.id,
+                            card: games[gameIndex].cardsDrafted[cardIndex]
+                        });
+                        games[gameIndex].cardsDrafted.splice(cardIndex, 1);
+
+                    });
+                    var tweetChoice = [];
+                    for (var i = 0; i < 4; i++){
+                        var tweetIndex = Math.floor(Math.random() * games[gameIndex].tweets.length);
+                        tweetChoice.push(games[gameIndex].tweets[tweetIndex]);
+                        games[gameIndex].tweets.splice(tweetIndex, 1);
+                    }
+                    if (games[gameIndex].selector == (games[gameIndex].currentPlayers.length - 1)) {
+                        games[gameIndex].selector = 0;
+                    } else {
+                        games[gameIndex].selector++;
+                    }
+                    setTimeout(() => {
+                        io.in(data.gameName).emit('newRound', {
+                            newCards,
+                            gameName: data.gameName,
+                            gameInfo,
+                            game: games[gameIndex],
+                            tweets: tweetChoice
+                        });
+                    }, 2000);
+
+                }
+            } else {
+                if(gameInfo.gamesRunning > 0){
+                    gameInfo.gamesRunning--;
+                }
+                var leavingPlayers = games[gameIndex].currentPlayers;
+                games.splice(gameIndex, 1);
+                setTimeout(() => {
+                    io.in(data.gameName).emit('lobby', {
+                        games,
+                        gameInfo,
+                        cards: trendingGifs
+                    });
+                    leavingPlayers.forEach((player) => {
+                        let socket = io.sockets.connected[player.id];
+                        socket.leave(data.gameName);
+                        socket.join('lobby');
+                    });
+
+                }, 4000);
             }
         }
     });

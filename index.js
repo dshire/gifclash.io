@@ -4,10 +4,12 @@ const server = require('http').Server(app);
 const io = require('socket.io').listen(server);
 const rp = require('request-promise');
 const prom = require('./twitter-api/prom.js');
+const helmet = require('helmet');
 const giphyKey = process.env.GIPHY_KEY || require('./key.json').giphyKey;
-
-
 const favicon = require('serve-favicon');
+
+app.use(helmet());
+
 app.use(favicon(__dirname + '/public/style/favicon.ico'));
 
 app.use(express.static('./public'));

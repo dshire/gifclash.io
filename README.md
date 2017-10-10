@@ -3,6 +3,9 @@
 ## Summary:
 An online multiplayer card game that mixes Cards Against Humanity with Gifs.
 
+# Title:
+![gifclash](./docs/gifclash.PNG)
+
 ## How to Play:
 1. Create a game and wait for at least 3 players to start match.
 2. The match starts with a card draft: Each player names 2 random things. Cards with Gifs about those 2 things will be randomly distributed to all players.

@@ -14,6 +14,8 @@ An online multiplayer card game that mixes Cards Against Humanity with Gifs.
 6. The winner gets a point, each player gets a random new card and the next round starts with a new dealer.
 7. First player to 3 winning rounds wins the match.
 
+![gifclash](./docs/gifclash-game.gif)
+
 ## Tech Stack:
 * jQuery & jQuery UI
 * Node.js
@@ -27,4 +29,4 @@ An online multiplayer card game that mixes Cards Against Humanity with Gifs.
 * Live online multiplayer
 * In-game chat
 * Multiple games at the same time on one server instance
-* Randomized through Giphy API and Twitter API requests: No game is alike!
+* Randomized through Giphy API and Twitter API requests: Each game will be different

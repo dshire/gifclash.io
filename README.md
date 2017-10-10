@@ -3,7 +3,6 @@
 ## Summary:
 An online multiplayer card game that mixes Cards Against Humanity with Gifs.
 
-# Title:
 ![gifclash](./docs/gifclash.PNG)
 
 ## How to Play:
